@@ -1,5 +1,5 @@
 #pragma once
-#include <cglm.h>
+#include <cglm/cglm.h>
 #include <assimp/scene.h>
 
 #include "base.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cglm.h>
+#include <cglm/cglm.h>
 #include "base.h"
 
 typedef enum {

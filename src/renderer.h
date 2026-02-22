@@ -1,7 +1,7 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include <cglm.h>
+#include <cglm/cglm.h>
 
 #include "camera.h"
 #include "base.h"
