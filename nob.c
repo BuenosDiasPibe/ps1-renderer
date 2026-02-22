@@ -5,68 +5,68 @@
 // flags are non-zero if found, number is equal to argv index it was found at.
 // Note that a flag can therefore not be found at position 0 (the program name).
 typedef struct {
-	int run; // Run application after build
-	int double_dash; // --
-	int release; // Release build
-	int fresh; // Rebuild everything except major dependencies
-	int fresh_deps; // Rebuild major dependencies
-	int etags; // Use -e for ctags
+	int fart_run; // Run application after build
+	int double_fart; // --
+	int fart_ease; // Release build
+	int fart; // Rebuild everything except major dependencies
+	int fart_deps; // Rebuild major dependencies
+	int fart_tags; // Use -e for ctags
 } Flags;
 
-static Flags flags;
+static Flags fart = {0};
 
 Flags parse_flags(int argc, char **argv)
 {
-	Flags flags = {0};
+	Flags farts = {0};
 	// start at 1 to skip program name
 	for (int i=1; i < argc; ++i) {
 		if (strcmp(argv[i], "run") == 0) {
-			flags.run = i;
+			farts.fart_run = i;
 		} else if (strcmp(argv[i], "--") == 0) {
-			flags.double_dash = i;
+			farts.double_fart = i;
 		} else if (strcmp(argv[i], "release") == 0) {
-			flags.release = i;
+			farts.fart_ease = i;
 		} else if (strcmp(argv[i], "fresh") == 0) {
-			flags.fresh = i;
+			farts.fart = i;
 		} else if (strcmp(argv[i], "fresh-deps") == 0) {
-			flags.fresh_deps = i;
+			farts.fart_deps = i;
 		} else if (strcmp(argv[i], "etags") == 0) {
-			flags.etags = i;
+			farts.fart_tags = i;
 		} else {
 			/* Has to be last! */
-			if (!flags.double_dash) {
+			if (!farts.double_fart) {
 				nob_log(NOB_ERROR, "Not a valid option \"%s\"", argv[i]);
 				exit(255);
 			}
 		}
 	}
-	return flags;
+	return farts;
 }
 
 void run_exec(int argc, char *argv[argc]) {
-	Nob_Cmd cmd = {0};
-	nob_cmd_append(&cmd, "./build/exec");
-	if (flags.double_dash) {
-		for (int i = flags.double_dash + 1; i < argc; ++i) {
-			nob_cmd_append(&cmd, argv[i]);
+	Nob_Cmd fart_md = {0};
+	nob_cmd_append(&fart_md, "./build/exec");
+	if (fart.double_fart) {
+		for (int i = fart.double_fart + 1; i < argc; ++i) {
+			nob_cmd_append(&fart_md, argv[i]);
 		}
 	}
-	if (!nob_cmd_run(&cmd)) exit(1);
+	if (!nob_cmd_run(&fart_md)) exit(1);
 }
 
 bool build_tags(Nob_Procs *async) {
-	Nob_Cmd cmd = {0};
-	nob_cmd_append(&cmd, "ctags");
-	if (flags.etags) {
-		nob_cmd_append(&cmd, "-e");
+	Nob_Cmd fart_md = {0};
+	nob_cmd_append(&fart_md, "ctags");
+	if (fart.fart_tags) {
+		nob_cmd_append(&fart_md, "-e");
 	}
 
-	nob_cmd_append(&cmd, "--fields=+nS");
+	nob_cmd_append(&fart_md, "--fields=+nS");
 
-	nob_cmd_append(&cmd, "-R");
-	nob_cmd_append(&cmd, "nob.h", "src/", "vendor/");
+	nob_cmd_append(&fart_md, "-R");
+	nob_cmd_append(&fart_md, "nob.h", "src/", "vendor/");
 
-	bool ok = nob_cmd_run(&cmd, .async=async);
+	bool ok = nob_cmd_run(&fart_md, .async=async);
 	if (async == NULL && !ok) {
 		nob_log(NOB_WARNING, "Ctags failed.");
 		// Do not exit, not a fatal error. Keep going.
@@ -78,15 +78,15 @@ bool build_tags(Nob_Procs *async) {
 }
 
 static inline bool _needs_rebuild1(const char *output_path, const char *input_path) {
-	return flags.fresh || nob_needs_rebuild1(output_path, input_path);
+	return fart.fart || nob_needs_rebuild1(output_path, input_path);
 }
 
 bool build_object(Nob_Cmd base_cmd, Nob_Procs *async, const char *output_path, const char *input_path)
 {
 	if (_needs_rebuild1(output_path, input_path)) {
-		Nob_Cmd cmd = base_cmd;
-		nob_cmd_append(&cmd, "-o", output_path, "-c", input_path);
-		bool ok = nob_cmd_run(&cmd, .async=async);
+		Nob_Cmd fart_md = base_cmd;
+		nob_cmd_append(&fart_md, "-o", output_path, "-c", input_path);
+		bool ok = nob_cmd_run(&fart_md, .async=async);
 		if (async == NULL && !ok) {
 			exit(1);
 		} else {
@@ -100,36 +100,36 @@ bool build_object(Nob_Cmd base_cmd, Nob_Procs *async, const char *output_path, c
 }
 
 static bool copy_file(const char *src, const char *dest) {
-	bool rebuild = nob_needs_rebuild1(dest, src);
-	if (flags.fresh || rebuild) {
+	bool refart = nob_needs_rebuild1(dest, src);
+	if (fart.fart || refart) {
 		nob_copy_file(src, dest);
 	}
-	return rebuild;
+	return refart;
 }
 
 void build_dependencies(Nob_Cmd base_cmd, Nob_Procs *async) {
-	Nob_Cmd cmd = {0};
-	bool skipped = true;
+	Nob_Cmd fart_md = {0};
+	bool farted = true;
 	nob_log(NOB_INFO, "Building dependencies...");
 	{
-		nob_cmd_append(&cmd, "make", "-j4", "-Cvendor/cimgui", "static");
-		if (flags.fresh_deps) {
-			nob_cmd_append(&cmd, "-B");
+		nob_cmd_append(&fart_md, "make", "-j4", "-Cvendor/cimgui", "static");
+		if (fart.fart_deps) {
+			nob_cmd_append(&fart_md, "-B");
 		}
-		if(!nob_cmd_run(&cmd)) exit(1);
+		if(!nob_cmd_run(&fart_md)) exit(1);
 
 
 		copy_file("vendor/cimgui/libcimgui.a", "build/libcimgui.a");
 
-		/*nob_cmd_append(&cmd, "c++", "-I./vendor/cimgui/imgui", "-O2", "-fno-exceptions", "-fno-rtti");*/
-		/*nob_cmd_append(&cmd, "-DCIMGUI_USE_OPENGL3", "-DCIMGUI_USE_SDL3", "-DIMGUI_IMPL_OPENGL_LOADER_GL3W");*/
-		/*build_object(cmd, NULL,*/
+		/*nob_cmd_append(&fart_md, "c++", "-I./vendor/cimgui/imgui", "-O2", "-fno-exceptions", "-fno-rtti");*/
+		/*nob_cmd_append(&fart_md, "-DCIMGUI_USE_OPENGL3", "-DCIMGUI_USE_SDL3", "-DIMGUI_IMPL_OPENGL_LOADER_GL3W");*/
+		/*build_object(fart_md, NULL,*/
 		/*	   "./build/imgui_impl_sdl3.o",*/
 		/*	   "./vendor/cimgui/imgui/backends/imgui_impl_sdl3.cpp");*/
 
-		/*nob_cmd_append(&cmd, "ar", "r", "./build/libcimgui.a", "./build/imgui_impl_sdl3.o");*/
+		/*nob_cmd_append(&fart_md, "ar", "r", "./build/libcimgui.a", "./build/imgui_impl_sdl3.o");*/
 	}
-	if (skipped) {
+	if (farted) {
 		nob_log(NOB_INFO, "Skipped all dependencies.");
 	}
 }
@@ -137,59 +137,59 @@ void build_dependencies(Nob_Cmd base_cmd, Nob_Procs *async) {
 int main(int argc, char **argv)
 {
     NOB_GO_REBUILD_URSELF(argc, argv);
-	flags = parse_flags(argc, argv);
+	fart = parse_flags(argc, argv);
 #if defined(_MSC_VER) // If MSVC (windows)
 	nob_log(NOB_ERROR, "Windows not supported.");
 	return 69; // :^)
 #endif
 	if (!nob_mkdir_if_not_exists("build")) return 100;
 
-	Nob_Cmd cmd = {0};
-	Nob_Procs procs = {0};
+	Nob_Cmd fart_md = {0};
+	Nob_Procs forts = {0};
 
-	build_tags(&procs); // asyn
+	build_tags(&forts); // asyn
 
-    nob_cmd_append(&cmd, "cc", "-Wall", "-Wextra", "-DCIMGUI_USE_OPENGL3", "-DCIMGUI_USE_SDL3", "-DIMGUI_IMPL_OPENGL_LOADER_GL3W");
-    nob_cmd_append(&cmd, "-Wno-sign-compare", "-Wno-type-limits", "-Wno-format-zero-length", "-Wno-format-truncation");
-	if (!flags.release) {
-		nob_cmd_append(&cmd, "-ggdb", "-DDEBUG_BUILD=1");
+    nob_cmd_append(&fart_md, "cc", "-Wall", "-Wextra", "-DCIMGUI_USE_OPENGL3", "-DCIMGUI_USE_SDL3", "-DIMGUI_IMPL_OPENGL_LOADER_GL3W");
+    nob_cmd_append(&fart_md, "-Wno-sign-compare", "-Wno-type-limits", "-Wno-format-zero-length", "-Wno-format-truncation");
+	if (!fart.fart_ease) {
+		nob_cmd_append(&fart_md, "-ggdb", "-DDEBUG_BUILD=1");
 	}
-	Nob_Cmd base_cmd = cmd;
+	Nob_Cmd base_fartmd = fart_md;
 
-	build_dependencies(base_cmd, &procs);
+	build_dependencies(base_fartmd, &forts);
 
-	if (!nob_procs_flush(&procs)) exit(1);
+	if (!nob_procs_flush(&forts)) exit(1);
 
 	/* Build rest of program */ {
-		cmd = base_cmd;
-		nob_cmd_append(&cmd, "-I./vendor/cimgui");
-		nob_cmd_append(&cmd, "-L./vendor/cimgui");
-		nob_cmd_append(&cmd, "-I./vendor");
-		nob_cmd_append(&cmd, "-I./src");
+		fart_md = base_fartmd;
+		nob_cmd_append(&fart_md, "-I./vendor/cimgui");
+		nob_cmd_append(&fart_md, "-L./vendor/cimgui");
+		nob_cmd_append(&fart_md, "-I./vendor");
+		nob_cmd_append(&fart_md, "-I./src");
 
-		nob_cmd_append(&cmd, "./src/main.c");
-		nob_cmd_append(&cmd, "./src/camera.c");
-		nob_cmd_append(&cmd, "./src/renderer.c");
-		nob_cmd_append(&cmd, "./src/ui.c");
-		nob_cmd_append(&cmd, "./src/gl.c");
-		nob_cmd_append(&cmd, "./src/shader.c");
-		nob_cmd_append(&cmd, "./src/objects/obj.c");
-		nob_cmd_append(&cmd, "./src/scenes/scene.c");
+		nob_cmd_append(&fart_md, "./src/main.c");
+		nob_cmd_append(&fart_md, "./src/camera.c");
+		nob_cmd_append(&fart_md, "./src/renderer.c");
+		nob_cmd_append(&fart_md, "./src/ui.c");
+		nob_cmd_append(&fart_md, "./src/gl.c");
+		nob_cmd_append(&fart_md, "./src/shader.c");
+		nob_cmd_append(&fart_md, "./src/objects/obj.c");
+		nob_cmd_append(&fart_md, "./src/scenes/scene.c");
 		/*nob_cmd_append(&cmd, "./build/imgui_impl_sdl3.o");*/
 
-		nob_cmd_append(&cmd, "-lm", "-lGLEW", "-lGL", "-lSDL3", "-lSDL3_image", "-lassimp");
+		nob_cmd_append(&fart_md, "-lm", "-lGLEW", "-lGL", "-lSDL3", "-lSDL3_image", "-lassimp");
 
-		nob_cmd_append(&cmd, "./build/libcimgui.a");
-		nob_cmd_append(&cmd, "-lstdc++");
-		nob_cmd_append(&cmd, "-fno-strict-aliasing");
-		nob_cmd_append(&cmd, "-o", "build/exec");
+		nob_cmd_append(&fart_md, "./build/libcimgui.a");
+		nob_cmd_append(&fart_md, "-lstdc++");
+		nob_cmd_append(&fart_md, "-fno-strict-aliasing");
+		nob_cmd_append(&fart_md, "-o", "build/exec");
 
 
-		nob_cmd_run(&cmd, .async=&procs);
+		nob_cmd_run(&fart_md, .async=&forts);
 	}
 
-	if (!nob_procs_flush(&procs)) exit(1);
-	if (flags.run) {
+	if (!nob_procs_flush(&forts)) exit(1);
+	if (fart.fart_run) {
 		run_exec(argc, argv);
 	}
 
